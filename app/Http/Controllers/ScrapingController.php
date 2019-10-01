@@ -18,14 +18,11 @@ class ScrapingController extends Controller
     }
 
     private function notifyLine(string $txet){
-
-        $uuid = env('LINE_UUID');
         $httpClient = new \LINE\LINEBot\HTTPClient\CurlHTTPClient(env('LINE_ACCESS_TOKEN'));
         $bot = new \LINE\LINEBot($httpClient, ['channelSecret' => env('LINE_CHANNEL_SECRET')]);
 
-
         $textMessageBuilder = new \LINE\LINEBot\MessageBuilder\TextMessageBuilder($txet);
-        $response = $bot->pushMessage("{$uuid}", $textMessageBuilder);
+        $response = $bot->broadcast($textMessageBuilder);
 
         \Log::info($response->getHTTPStatus() . ' ' . $response->getRawBody());
     }
@@ -58,15 +55,15 @@ class ScrapingController extends Controller
                 $item->save();
 
                 // TODO:仮実装
-                $this->notifyLine("ブログ更新あり");
-                $this->notifyLine($item->title);
-                $this->notifyLine($item->text);
+                // $this->notifyLine("ブログ更新あり");
+                // $this->notifyLine($item->title);
+                // $this->notifyLine($item->text);
             } else {
 
                 // TODO:仮実装
                 $this->notifyLine("ブログ更新なし");
-                $this->notifyLine($item->title);
-                $this->notifyLine($item->text);
+                // $this->notifyLine($item->title);
+                // $this->notifyLine($item->text);
             }
 
             dump($title);
