@@ -28,9 +28,9 @@ class ScrapingController extends Controller
         return false;
     }
 
-    private function notifyLine(string $txet){
-        $httpClient = new \LINE\LINEBot\HTTPClient\CurlHTTPClient(env('LINE_ACCESS_TOKEN'));
-        $bot = new \LINE\LINEBot($httpClient, ['channelSecret' => env('LINE_CHANNEL_SECRET')]);
+    private function notifyLine(Channel $channel, string $txet){
+        $httpClient = new \LINE\LINEBot\HTTPClient\CurlHTTPClient($channel->access_token);
+        $bot = new \LINE\LINEBot($httpClient, ['channelSecret' => $channel->channel_secret]);
 
         $textMessageBuilder = new \LINE\LINEBot\MessageBuilder\TextMessageBuilder($txet);
         $response = $bot->broadcast($textMessageBuilder);
@@ -69,8 +69,7 @@ class ScrapingController extends Controller
                 $channels = Channel::all();
                 foreach($channels as $channel){
                     if($this->hasKeyword($channel, $item)){
-                        $this->notifyLine($item->title);
-                        $this->notifyLine($item->text);
+                        $this->notifyLine($channel, $item->title . "\n" . $item->text);
                         \Log::info("Has Keyword keyword={$channel->keyword} item->title={$item->title}");
                     }
                 }
