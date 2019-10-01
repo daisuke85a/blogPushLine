@@ -61,7 +61,7 @@ class ScrapingController extends Controller
             } else {
 
                 // TODO:仮実装
-                $this->notifyLine("ブログ更新なし");
+                // $this->notifyLine("ブログ更新なし");
                 // $this->notifyLine($item->title);
                 // $this->notifyLine($item->text);
             }
