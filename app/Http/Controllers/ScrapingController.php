@@ -56,9 +56,15 @@ class ScrapingController extends Controller
 
             if (!$this->isScraped($item)) {
                 $item->save();
+
+                // TODO:仮実装
+                $this->notifyLine("ブログ更新あり");
                 $this->notifyLine($item->title);
                 $this->notifyLine($item->text);
             } else {
+
+                // TODO:仮実装
+                $this->notifyLine("ブログ更新なし");
                 $this->notifyLine($item->title);
                 $this->notifyLine($item->text);
             }
