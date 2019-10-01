@@ -17,6 +17,28 @@ class ScrapingController extends Controller
         return $count ? true:false;
     }
 
+    private function notifyLine(string $txet){
+
+        $uuid = env('LINE_UUID');
+        $httpClient = new \LINE\LINEBot\HTTPClient\CurlHTTPClient(env('LINE_ACCESS_TOKEN'));
+        $bot = new \LINE\LINEBot($httpClient, ['channelSecret' => env('LINE_CHANNEL_SECRET')]);
+
+
+        $textMessageBuilder = new \LINE\LINEBot\MessageBuilder\TextMessageBuilder($txet);
+        $response = $bot->pushMessage("{$uuid}", $textMessageBuilder);
+
+        \Log::info($response->getHTTPStatus() . ' ' . $response->getRawBody());
+    }
+
+    public function webhook(Request $request){
+        \Log::info("post webhook");
+
+        // 仮実装
+        \Log::info($request->input('destination'));
+        \Log::info($request->input('events'));
+        return view('welcome');
+    }
+
     public function scraping(Request $request)
     {
         $crawler = Goutte::request('GET', 'http://funspot.jugem.jp/');
@@ -34,9 +56,11 @@ class ScrapingController extends Controller
 
             if (!$this->isScraped($item)) {
                 $item->save();
-                dump("true");
+                $this->notifyLine($item->title);
+                $this->notifyLine($item->text);
             } else {
-                dump("false");
+                $this->notifyLine($item->title);
+                $this->notifyLine($item->text);
             }
 
             dump($title);
