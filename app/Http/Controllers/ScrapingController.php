@@ -21,7 +21,6 @@ class ScrapingController extends Controller
         $httpClient = new \LINE\LINEBot\HTTPClient\CurlHTTPClient(env('LINE_ACCESS_TOKEN'));
         $bot = new \LINE\LINEBot($httpClient, ['channelSecret' => env('LINE_CHANNEL_SECRET')]);
 
-
         $textMessageBuilder = new \LINE\LINEBot\MessageBuilder\TextMessageBuilder($txet);
         $response = $bot->broadcast($textMessageBuilder);
 
