@@ -29,7 +29,7 @@ class ScrapingController extends Controller
             });
 
             $item = Item::make(
-                [ 'title' => $title ,'text' => $this->text ],
+                [ 'title' => $title ,'text' => $this->text ]
             );
 
             if (!$this->isScraped($item)) {

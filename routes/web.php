@@ -12,3 +12,8 @@
 */
 
 Route::get('/', 'ScrapingController@scraping');
+
+Route::get('/webhook', function(){
+    \Log::info("get webhook");
+    return view('welcome');
+});
