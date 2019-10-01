@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Goutte;
 use App\Item;
+use App\Channel;
 
 class ScrapingController extends Controller
 {
@@ -15,6 +16,16 @@ class ScrapingController extends Controller
         //タイトルと本文が両方とも一致しているかを確認する
         $count = Item::where('title', $item->title)->orWhere('text', $item->title)->count();
         return $count ? true:false;
+    }
+
+    private function hasKeyword(Channel $channel, Item $item): bool
+    {
+        //タイトルか本文にキーワードが含まれているかを確認する
+        if( strpos($item->title . $item->text ,  $channel->keyword ) !== false ){
+            return true;
+        }
+
+        return false;
     }
 
     private function notifyLine(string $txet){
@@ -54,22 +65,20 @@ class ScrapingController extends Controller
             if (!$this->isScraped($item)) {
                 $item->save();
 
-                // TODO:仮実装
-                // $this->notifyLine("ブログ更新あり");
-                // $this->notifyLine($item->title);
-                // $this->notifyLine($item->text);
+                \Log::info("item save item->title={$item->title}");
+                $channels = Channel::all();
+                foreach($channels as $channel){
+                    if($this->hasKeyword($channel, $item)){
+                        $this->notifyLine($item->title);
+                        $this->notifyLine($item->text);
+                        \Log::info("Has Keyword keyword={$channel->keyword} item->title={$item->title}");
+                    }
+                }
             } else {
-
-                // TODO:仮実装
-                // $this->notifyLine("ブログ更新なし");
-                // $this->notifyLine($item->title);
-                // $this->notifyLine($item->text);
+                \Log::info("item was Scraped item->title={$item->title}");
             }
 
-            dump($title);
-            dump($this->text);
         });
-        dump("end");
 
         return view('welcome');
     }
