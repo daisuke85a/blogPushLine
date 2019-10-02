@@ -47,7 +47,7 @@ class ScrapingController extends Controller
         return view('welcome');
     }
 
-    public function scraping(Request $request)
+    public function scraping()
     {
         $crawler = Goutte::request('GET', 'http://funspot.jugem.jp/');
 
