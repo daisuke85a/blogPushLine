@@ -14,7 +14,7 @@ class ScrapingController extends Controller
     private function isScraped(Item $item): bool
     {
         //タイトルと本文が両方とも一致しているかを確認する
-        $count = Item::where('title', $item->title)->orWhere('text', $item->title)->count();
+        $count = Item::where('text', $item->text)->count();
         return $count ? true:false;
     }
 
@@ -47,8 +47,7 @@ class ScrapingController extends Controller
         return view('welcome');
     }
 
-    public function scraping(Request $request)
-    {
+    private function scraping_funspot(){
         $crawler = Goutte::request('GET', 'http://funspot.jugem.jp/');
 
         $crawler->filter('.entry')->each(function ($node) {
@@ -56,6 +55,51 @@ class ScrapingController extends Controller
             $this->text = "";
             $node->filter('.jgm_entry_desc_mark p')->each(function ($node) {
                 $this->text =  $this->text . $node->text();
+            });
+
+            $item = Item::make(
+                [ 'title' => $title ,'text' => $this->text ]
+            );
+
+            if (!$this->isScraped($item)) {
+                $item->save();
+
+                \Log::info("item save item->title={$item->title}");
+                $channels = Channel::all();
+                foreach($channels as $channel){
+                    if($this->hasKeyword($channel, $item)){
+                        $this->notifyLine($channel, $item->title . "\n" . $item->text);
+                        \Log::info("Has Keyword keyword={$channel->keyword} item->title={$item->title}");
+                    }
+                }
+            } else {
+                \Log::info("item was Scraped item->title={$item->title}");
+            }
+
+        });
+    }
+
+    public function scraping()
+    {
+        $crawler = Goutte::request('GET', 'http://blog.studio-shake.com/');
+
+        $crawler->filter('div.entry')->each(function ($node) {
+            $title = $node->filter('h2')->text();
+            $this->text = "";
+            $text = "";
+            $node->filter('.jgm_entry_desc_mark')->each(function ($node) {
+                $node->filter('div.service_button')->clear();
+                $node->each(function ($node) {
+                    // var_dump($pos = mb_strrpos($node->text(), "Tweet"));
+                    // var_dump(mb_substr($node->text(),0,$pos));
+                    if( FALSE !== $pos = mb_strrpos($node->text(), "Tweet")){
+                        $this->text =  $this->text .  mb_substr($node->text(),0,$pos);
+                    }else{
+                        $this->text =  $this->text .  $node->text();
+                    }
+                });
+                var_dump($this->text);
+                // $this->text =  $this->text . $text;
             });
 
             $item = Item::make(
