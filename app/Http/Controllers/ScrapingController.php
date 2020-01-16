@@ -13,26 +13,27 @@ class ScrapingController extends Controller
 
     private function isScraped(Item $item): bool
     {
-        //タイトルと本文が両方とも一致しているかを確認する
-        $count = Item::where('text', $item->text)->count();
+        //タイトルが一致しているかを確認する
+        $count = Item::where('title', $item->title)->count();
         return $count ? true:false;
     }
 
     private function hasKeyword(Channel $channel, Item $item): bool
     {
-        if($channel->keyword == '*'){
+        if ($channel->keyword == '*') {
             return true;
         }
 
         //タイトルか本文にキーワードが含まれているかを確認する
-        if( strpos($item->title . $item->text ,  $channel->keyword ) !== false ){
+        if (strpos($item->title . $item->text, $channel->keyword) !== false) {
             return true;
         }
 
         return false;
     }
 
-    private function notifyLine(Channel $channel, string $txet){
+    private function notifyLine(Channel $channel, string $txet)
+    {
         $httpClient = new \LINE\LINEBot\HTTPClient\CurlHTTPClient($channel->access_token);
         $bot = new \LINE\LINEBot($httpClient, ['channelSecret' => $channel->channel_secret]);
 
@@ -42,7 +43,8 @@ class ScrapingController extends Controller
         \Log::info($response->getHTTPStatus() . ' ' . $response->getRawBody());
     }
 
-    public function webhook(Request $request){
+    public function webhook(Request $request)
+    {
         \Log::info("post webhook");
 
         // 仮実装
@@ -51,7 +53,8 @@ class ScrapingController extends Controller
         return view('welcome');
     }
 
-    private function scraping_funspot(){
+    private function scraping_funspot()
+    {
         $crawler = Goutte::request('GET', 'http://funspot.jugem.jp/');
 
         $crawler->filter('.entry')->each(function ($node) {
@@ -61,6 +64,8 @@ class ScrapingController extends Controller
                 $this->text =  $this->text . $node->text();
             });
 
+            // \Log::info($this->text);
+
             $item = Item::make(
                 [ 'title' => $title ,'text' => $this->text ]
             );
@@ -70,8 +75,8 @@ class ScrapingController extends Controller
 
                 \Log::info("item save item->title={$item->title}");
                 $channels = Channel::all();
-                foreach($channels as $channel){
-                    if($this->hasKeyword($channel, $item)){
+                foreach ($channels as $channel) {
+                    if ($this->hasKeyword($channel, $item)) {
                         $this->notifyLine($channel, $item->title . "\n" . $item->text);
                         \Log::info("Has Keyword keyword={$channel->keyword} item->title={$item->title}");
                     }
@@ -79,17 +84,17 @@ class ScrapingController extends Controller
             } else {
                 \Log::info("item was Scraped item->title={$item->title}");
             }
-
         });
     }
 
-    public function scraping(){
+    public function scraping()
+    {
         $crawler = Goutte::request('GET', 'https://jko.hateblo.jp/');
 
         $crawler->filter('.entry')->each(function ($node) {
             $title = $node->filter('.entry-title a')->text();
             $this->text = "";
-            $node->filter('.entry-content p')->each(function ($node) {
+            $node->filter('.entry-content')->each(function ($node) {
                 $this->text =  $this->text . "\n\n" . $node->text();
             });
 
@@ -97,13 +102,16 @@ class ScrapingController extends Controller
                 [ 'title' => $title ,'text' => $this->text ]
             );
 
+            // \Log::debug($this->text);
+            // \Log::debug(print_r($node, true));
+
             if (!$this->isScraped($item)) {
                 $item->save();
 
                 \Log::info("item save item->title={$item->title}");
                 $channels = Channel::all();
-                foreach($channels as $channel){
-                    if($this->hasKeyword($channel, $item)){
+                foreach ($channels as $channel) {
+                    if ($this->hasKeyword($channel, $item)) {
                         $this->notifyLine($channel, $item->title . "\n" . $item->text);
                         \Log::info("Has Keyword keyword={$channel->keyword} item->title={$item->title}");
                     }
@@ -111,7 +119,6 @@ class ScrapingController extends Controller
             } else {
                 \Log::info("item was Scraped item->title={$item->title}");
             }
-
         });
     }
 
@@ -128,9 +135,9 @@ class ScrapingController extends Controller
                 $node->each(function ($node) {
                     // var_dump($pos = mb_strrpos($node->text(), "Tweet"));
                     // var_dump(mb_substr($node->text(),0,$pos));
-                    if( FALSE !== $pos = mb_strrpos($node->text(), "Tweet")){
-                        $this->text =  $this->text .  mb_substr($node->text(),0,$pos);
-                    }else{
+                    if (false !== $pos = mb_strrpos($node->text(), "Tweet")) {
+                        $this->text =  $this->text .  mb_substr($node->text(), 0, $pos);
+                    } else {
                         $this->text =  $this->text .  $node->text();
                     }
                 });
@@ -147,8 +154,8 @@ class ScrapingController extends Controller
 
                 \Log::info("item save item->title={$item->title}");
                 $channels = Channel::all();
-                foreach($channels as $channel){
-                    if($this->hasKeyword($channel, $item)){
+                foreach ($channels as $channel) {
+                    if ($this->hasKeyword($channel, $item)) {
                         $this->notifyLine($channel, $item->title . "\n" . $item->text);
                         \Log::info("Has Keyword keyword={$channel->keyword} item->title={$item->title}");
                     }
@@ -156,7 +163,6 @@ class ScrapingController extends Controller
             } else {
                 \Log::info("item was Scraped item->title={$item->title}");
             }
-
         });
 
         return view('welcome');
