@@ -20,6 +20,10 @@ class ScrapingController extends Controller
 
     private function hasKeyword(Channel $channel, Item $item): bool
     {
+        if($channel->keyword == '*'){
+            return true;
+        }
+
         //タイトルか本文にキーワードが含まれているかを確認する
         if( strpos($item->title . $item->text ,  $channel->keyword ) !== false ){
             return true;
@@ -79,7 +83,39 @@ class ScrapingController extends Controller
         });
     }
 
-    public function scraping()
+    public function scraping(){
+        $crawler = Goutte::request('GET', 'https://jko.hateblo.jp/');
+
+        $crawler->filter('.entry')->each(function ($node) {
+            $title = $node->filter('.entry-title a')->text();
+            $this->text = "";
+            $node->filter('.entry-content p')->each(function ($node) {
+                $this->text =  $this->text . "\n\n" . $node->text();
+            });
+
+            $item = Item::make(
+                [ 'title' => $title ,'text' => $this->text ]
+            );
+
+            if (!$this->isScraped($item)) {
+                $item->save();
+
+                \Log::info("item save item->title={$item->title}");
+                $channels = Channel::all();
+                foreach($channels as $channel){
+                    if($this->hasKeyword($channel, $item)){
+                        $this->notifyLine($channel, $item->title . "\n" . $item->text);
+                        \Log::info("Has Keyword keyword={$channel->keyword} item->title={$item->title}");
+                    }
+                }
+            } else {
+                \Log::info("item was Scraped item->title={$item->title}");
+            }
+
+        });
+    }
+
+    public function scraping_shake()
     {
         $crawler = Goutte::request('GET', 'http://blog.studio-shake.com/');
 
