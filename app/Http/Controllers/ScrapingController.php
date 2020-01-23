@@ -94,13 +94,23 @@ class ScrapingController extends Controller
         $crawler->filter('.entry')->each(function ($node) {
             $title = $node->filter('.entry-title a')->text();
             $this->text = "";
-            $node->filter('.entry-content')->each(function ($node) {
-                $this->text =  $this->text . "\n\n" . $node->text();
+            $node->filter('.entry-content *')->each(function ($node) {
+                // \Log::debug($node->text());
+                if (!empty($node->text())) {
+                    \Log::debug('not empty');
+                    \Log::debug($node->text());
+                    $this->text =  $this->text . "\n\n" . $node->text();
+                } else {
+                    // \Log::debug('empty');
+                }
             });
 
             $item = Item::make(
                 [ 'title' => $title ,'text' => $this->text ]
             );
+
+            \Log::debug('text');
+            \Log::debug($this->text);
 
             // \Log::debug($this->text);
             // \Log::debug(print_r($node, true));
