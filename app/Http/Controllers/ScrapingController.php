@@ -94,7 +94,7 @@ class ScrapingController extends Controller
         $crawler->filter('.entry')->each(function ($node) {
             $title = $node->filter('.entry-title a')->text();
             $this->text = "";
-            $node->filter('.entry-content *')->each(function ($node) {
+            $node->filter('.entry-content > *')->each(function ($node) {
                 // \Log::debug($node->text());
                 if (!empty($node->text())) {
                     \Log::debug('not empty');
