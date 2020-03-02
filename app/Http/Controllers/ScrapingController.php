@@ -13,8 +13,8 @@ class ScrapingController extends Controller
 
     private function isScraped(Item $item): bool
     {
-        //タイトルが一致しているかを確認する
-        $count = Item::where('title', $item->title)->count();
+        //タイトルと本文が一致しているかを確認する
+        $count = Item::where('text', $item->text)->count();
         return $count ? true:false;
     }
 
@@ -95,10 +95,7 @@ class ScrapingController extends Controller
             $title = $node->filter('.entry-title a')->text();
             $this->text = "";
             $node->filter('.entry-content > *')->each(function ($node) {
-                // \Log::debug($node->text());
                 if (!empty($node->text())) {
-                    \Log::debug('not empty');
-                    \Log::debug($node->text());
                     $this->text =  $this->text . "\n\n" . $node->text();
                 } else {
                     // \Log::debug('empty');
@@ -108,9 +105,6 @@ class ScrapingController extends Controller
             $item = Item::make(
                 [ 'title' => $title ,'text' => $this->text ]
             );
-
-            \Log::debug('text');
-            \Log::debug($this->text);
 
             // \Log::debug($this->text);
             // \Log::debug(print_r($node, true));
