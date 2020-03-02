@@ -13,8 +13,8 @@ class ScrapingController extends Controller
 
     private function isScraped(Item $item): bool
     {
-        //タイトルが一致しているかを確認する
-        $count = Item::where('title', $item->title)->count();
+        //タイトルと本文が一致しているかを確認する
+        $count = Item::where('text', $item->text)->count();
         return $count ? true:false;
     }
 
